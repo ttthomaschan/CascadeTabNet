@@ -5,13 +5,24 @@ import numpy as np
 # Output : hor,ver 
 def line_detection(image):
 
-    img_name = "mt01"
+    img_name = "mt04"
+    #res_path = "/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/"
+    res_path = "/home/junlin/Git/github/cascade-tabnet_pytorch/Data Preparation/test_results/"
+
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    bw = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 1)
+    cv2.imwrite(res_path + img_name + '_adathres.jpg',bw)
+    bw = cv2.bitwise_not(bw)
+    cv2.imwrite(res_path + img_name + '_bitwise_not.jpg',bw)
+
     '''
     tmp operation:
     Read txt lines for bbox location.
     '''
     zeros = np.zeros((image.shape), dtype=np.uint8)
-    bbox_file = open('/home/elimen/Data/cascade-tabnet_pytorch/Table Structure Recognition/Functions/mt01_result_bbox.txt', 'r')
+    #bbox_file = open('/home/elimen/Data/cascade-tabnet_pytorch/Table Structure Recognition/Functions/mt01_result_bbox.txt', 'r')
+    bbox_file = open('/home/junlin/Git/github/cascade-tabnet_pytorch/Table Structure Recognition/Functions/mt04_result_bbox.txt', 'r')
     bbox_lines = bbox_file.readlines()
     bboxes_loc = []
     for line in bbox_lines:
@@ -24,21 +35,12 @@ def line_detection(image):
         y2 = int(line.split('.')[3])
         bbox = [x1,y1,x2,y2]
         bboxes_loc.append(bbox)
-        zeros_mask = cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color=(0,0,0), thickness=-1)
+        offset_x =  int((bbox[3] - bbox[1])*0.12)
+        offset_y =  int((bbox[3] - bbox[1])*0.15)
+        zeros_mask = cv2.rectangle(bw, (bbox[0]-offset_x, bbox[1]-offset_y), (bbox[2]+offset_x, bbox[3]+offset_y), color=(0,0,0), thickness=-1)
 
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_zeros_mask.jpg',zeros_mask)
+    cv2.imwrite(res_path + img_name + '_zeros_mask.jpg',zeros_mask)
 
-
-    
-
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    bw = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 1)
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_adathres.jpg',bw)
-    bw = cv2.bitwise_not(bw)
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_bitwise_not.jpg',bw)
-    ## To visualize image after thresholding ##
-    # cv2.imshow("bw",bw)
-    # cv2.waitKey(0)
     ###########################################
     horizontal = bw.copy()
     vertical = bw.copy()
@@ -49,14 +51,14 @@ def line_detection(image):
 
     # Apply morphology operations
     horizontal = cv2.erode(horizontal, horizontalStructure)
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_erodeH.jpg',horizontal)
+    cv2.imwrite(res_path + img_name + '_erodeH.jpg',horizontal)
     horizontal = cv2.dilate(horizontal, horizontalStructure)
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_dilateH.jpg',horizontal)
+    cv2.imwrite(res_path + img_name + '_dilateH.jpg',horizontal)
     horizontal = cv2.dilate(horizontal, (1,1), iterations=5)
     horizontal = cv2.erode(horizontal, (1,1), iterations=5)
 
     ## Uncomment to visualize highlighted Horizontal lines
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_horizontal.jpg',horizontal)
+    cv2.imwrite(res_path + img_name + '_horizontal.jpg',horizontal)
     # cv2.imshow("horizontal",horizontal)
     # cv2.waitKey(0)
 
@@ -77,7 +79,7 @@ def line_detection(image):
     for x1, y1, x2, y2 in hor_lines:
         cv2.line(image, (x1,y1), (x2,y2), (0, 255, 0), 1)
 
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_linesH.jpg',image)
+    cv2.imwrite(res_path + img_name + '_linesH.jpg',image)
     # print(image.shape)
     # cv2.imshow("image",image)
     # cv2.waitKey(0)
@@ -108,7 +110,7 @@ def line_detection(image):
     imgtmp = img.copy()
     for x1, y1, x2, y2 in hor:
         cv2.line(imgtmp, (x1,y1), (x2,y2), (0, 255, 0), 1)
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_linesH_2.jpg',imgtmp)
+    cv2.imwrite(res_path + img_name + '_linesH_2.jpg',imgtmp)
     #####################################################################
 
 
@@ -124,7 +126,7 @@ def line_detection(image):
     vertical = cv2.erode(vertical, (1,1), iterations=7)
 
     ######## Preprocessing Vertical Lines ###############
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_vertical.jpg',vertical)
+    cv2.imwrite(res_path + img_name + '_vertical.jpg',vertical)
     # cv2.imshow("vertical",vertical)
     # cv2.waitKey(0)
     #####################################################
@@ -147,7 +149,7 @@ def line_detection(image):
     for x1, y1, x2, y2 in ver_lines:
         cv2.line(image, (x1,y1-5), (x2,y2-5), (0, 255, 0), 1)
 
-    cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/' + img_name + '_lines.jpg',image)
+    cv2.imwrite(res_path + img_name + '_lines.jpg',image)
     # print(image.shape)
     # cv2.imshow("image",image)
     # cv2.waitKey(0)
@@ -181,13 +183,17 @@ def line_detection(image):
     ver.append([lastx1,min(lines_y2)-5,lastx1,max(lines_y1)-5])
     #################################################################
 
-
+    zerostmp = np.zeros((image.shape), dtype=np.uint8)
     ############ Visualization of Lines After Post Processing ############
     for x1, y1, x2, y2 in ver:
         cv2.line(img, (x1,y1), (x2,y2), (0, 0,255), 1)
+        cv2.line(zerostmp, (x1,y1), (x2,y2), (0, 0,255), 1)
 
     for x1, y1, x2, y2 in hor:
         cv2.line(img, (x1,y1), (x2,y2), (0, 0, 255), 1)
+        cv2.line(zerostmp, (x1,y1), (x2,y2), (0, 0, 255), 1)
+    
+    cv2.imwrite(res_path + img_name + '_interresults.jpg',zerostmp)
     
     #cv2.imshow("image",img)
     #cv2.waitKey(0)
@@ -195,5 +201,5 @@ def line_detection(image):
 
     return hor,ver,img
 
-hori, vert, dst = line_detection(cv2.imread('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_images/mt01.png'))
-cv2.imwrite('/home/elimen/Data/cascade-tabnet_pytorch/Data Preparation/test_results/mt01_results.jpg',dst)
+hori, vert, dst = line_detection(cv2.imread('/home/junlin/Git/github/cascade-tabnet_pytorch/Data Preparation/test_images/mt04.png'))
+cv2.imwrite('/home/junlin/Git/github/cascade-tabnet_pytorch/Data Preparation/test_results/mt04_results.jpg',dst)
